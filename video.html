@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Player</title>
+<style>
+    #videoList {
+        list-style-type: none;
+        padding: 0;
+    }
+    #videoList li {
+        cursor: pointer;
+        margin-bottom: 5px;
+    }
+    #videoList li.playing {
+        color: blue; /* Change color for the currently playing video */
+    }
+    #videoPlayerContainer {
+        position: relative;
+        display: inline-block;
+    }
+    #volumeIndicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 5px;
+        display: none;
+    }
+</style>
+</head>
+<body>
+<h1>Simple Video Player</h1>
+<div id="videoPlayerContainer">
+    <input type="file" id="videoFolderInput" webkitdirectory directory multiple>
+    <br><br>
+    <video id="videoPlayer" width="640" height="360" controls>
+        Your browser does not support the video tag.
+    </video>
+    <div id="volumeIndicator">Volume: <span id="volumePercentage">100</span>%</div>
+</div>
+<ul id="videoList"></ul>
+
+<script>
+const videoPlayer = document.getElementById('videoPlayer');
+const volumeIndicator = document.getElementById('volumeIndicator');
+const volumePercentage = document.getElementById('volumePercentage');
+const videoList = document.getElementById('videoList');
+let currentVideoItem = null;
+
+document.getElementById('videoFolderInput').addEventListener('change', function(event) {
+    const files = event.target.files;
+    videoList.innerHTML = ''; // Clear previous list
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.startsWith('video/')) {
+            const listItem = document.createElement('li');
+            listItem.textContent = file.name;
+            listItem.addEventListener('click', function() {
+                loadVideo(file);
+                highlightVideoItem(listItem);
+            });
+            videoList.appendChild(listItem);
+        }
+    }
+});
+
+function loadVideo(file) {
+    const objectURL = URL.createObjectURL(file);
+    videoPlayer.src = objectURL;
+    videoPlayer.play();
+}
+
+function updateVolumeIndicator() {
+    const volume = Math.round(videoPlayer.volume * 100);
+    volumePercentage.textContent = volume;
+    volumeIndicator.style.display = 'block';
+}
+
+videoPlayer.addEventListener('volumechange', updateVolumeIndicator);
+
+document.addEventListener('keydown', function(event) {
+    switch(event.key) {
+        case 'ArrowLeft':
+            videoPlayer.currentTime -= 5;
+            break;
+        case 'ArrowRight':
+            videoPlayer.currentTime += 5;
+            break;
+        case 'ArrowUp':
+            if (videoPlayer.volume < 1) {
+                videoPlayer.volume += 0.1;
+                updateVolumeIndicator();
+            }
+            break;
+        case 'ArrowDown':
+            if (videoPlayer.volume > 0) {
+                videoPlayer.volume -= 0.1;
+                updateVolumeIndicator();
+            }
+            break;
+        case 'f':
+            toggleFullScreen();
+            break;
+    }
+});
+
+function toggleFullScreen() {
+    if (videoPlayer.requestFullscreen) {
+        videoPlayer.requestFullscreen();
+    } else if (videoPlayer.mozRequestFullScreen) {
+        videoPlayer.mozRequestFullScreen();
+    } else if (videoPlayer.webkitRequestFullscreen) {
+        videoPlayer.webkitRequestFullscreen();
+    } else if (videoPlayer.msRequestFullscreen) {
+        videoPlayer.msRequestFullscreen();
+    }
+}
+
+function highlightVideoItem(item) {
+    if (currentVideoItem) {
+        currentVideoItem.classList.remove('playing');
+    }
+    currentVideoItem = item;
+    currentVideoItem.classList.add('playing');
+}
+</script>
+</body>
+</html>
